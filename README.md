@@ -1,12 +1,60 @@
-# React + Vite
+# GitHub User Search
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+### 1. Install Dependencies
 
-Currently, two official plugins are available:
+Choose your preferred package manager:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```bash
+# Using npm
+npm install
 
-## Expanding the ESLint configuration
+# Using yarn
+yarn install
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+# Using pnpm
+pnpm install
+```
+
+### 2. Environment Setup
+
+Create a `.env` file in the root directory:
+
+```bash
+# Copy the example file
+cp .env.example .env
+```
+
+Add your GitHub Personal Access Token:
+
+```env
+VITE_GITHUB_TOKEN=your_github_personal_access_token_here
+```
+
+#### 🔑 How to Get GitHub Token
+
+1. Go to [GitHub Settings > Developer settings > Personal access tokens](https://github.com/settings/tokens)
+2. Click **"Generate new token (classic)"**
+3. Give it a descriptive name (e.g., "GitHub User Search App")
+4. Select expiration period
+5. **No scopes needed** for public repository access
+6. Click **"Generate token"**
+7. Copy the token and paste it in your `.env` file
+
+> ⚠️ **Important**: Keep your token secure and never commit it to version control!
+
+### 3. Run the Project
+
+Start the development server:
+
+```bash
+# Using npm
+npm run dev
+
+# Using yarn
+yarn dev
+
+# Using pnpm
+pnpm dev
+```
+
+The application will be available at `http://localhost:5173`
