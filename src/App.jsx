@@ -138,7 +138,7 @@ const App = () => {
         </form>
       </div>
 
-      {error && <Error message={error.message} />}
+      {error && <Error message={error?.message} />}
 
       <FormProvider {...methods}>
         <Users
