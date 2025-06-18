@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { ChangeEvent, useCallback } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { Search, User } from "lucide-react";
 import useSWRInfinite from "swr/infinite";
@@ -8,15 +8,14 @@ import Error from "./shared/components/Error";
 import Users from "./shared/layouts/Users";
 
 const App = () => {
-  const methods = useForm({
+  const methods = useForm<Form>({
     defaultValues: {
       searchQuery: "",
       exclude: {
         expandedId: [],
         shouldFetch: false,
-        repoLoadingStates: {},
-        repositoriesCache: {},
-        swrKey: null,
+        expandedRepository: "",
+        swrKey: "",
         currentPage: 1,
       },
     },
@@ -28,7 +27,7 @@ const App = () => {
   const shouldFetch = watch("exclude.shouldFetch");
 
   const getSearchKey = useCallback(
-    (pageIndex, previousPageData) => {
+    (pageIndex: number, previousPageData: Record<string, any>) => {
       const formValues = getValues();
       if (!formValues.exclude.swrKey) return null;
       if (previousPageData && !previousPageData.hasMore) return null;
@@ -47,7 +46,8 @@ const App = () => {
     setSize,
   } = useSWRInfinite(
     getSearchKey,
-    async ([, query, page]) => await searchUsers(query, page),
+    async ([, query, page]) =>
+      await searchUsers(query as string, page as number),
     {
       revalidateOnFocus: false,
       revalidateFirstPage: false,
@@ -59,13 +59,11 @@ const App = () => {
   const error = searchError;
   const isLoading = isSearchLoading && size === 1;
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data: Form) => {
     if (!data.searchQuery?.trim()) return;
 
     setValue("exclude.shouldFetch", true);
     setValue("exclude.expandedId", []);
-    setValue("exclude.repoLoadingStates", {});
-    setValue("exclude.repositoriesCache", {});
     setValue("exclude.currentPage", 1);
 
     setSize(1);
@@ -80,11 +78,11 @@ const App = () => {
     }
   }, [hasMore, isSearchLoading, isSearchValidating, size, setSize, setValue]);
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: any) => {
     if (e.key === "Escape") {
       reset();
       setValue("exclude.shouldFetch", false);
-      setValue("exclude.swrKey", null);
+      setValue("exclude.swrKey", "");
       setValue("exclude.currentPage", 1);
     }
 
@@ -94,16 +92,14 @@ const App = () => {
     }
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setValue("searchQuery", value);
 
     if (!value.trim()) {
       setValue("exclude.shouldFetch", false);
       setValue("exclude.expandedId", []);
-      setValue("exclude.repoLoadingStates", {});
-      setValue("exclude.repositoriesCache", {});
-      setValue("exclude.swrKey", null);
+      setValue("exclude.swrKey", "");
       setValue("exclude.currentPage", 1);
     }
   };
@@ -129,6 +125,7 @@ const App = () => {
           </div>
 
           <button
+            data-testid="submit-btn"
             type="submit"
             disabled={isLoading || !searchQuery?.trim()}
             className="w-full mt-3 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-md transition-colors"

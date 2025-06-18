@@ -1,14 +1,8 @@
-import { getUserRepositories } from "../lib/api";
 import { useFormContext } from "react-hook-form";
 import { ChevronDown } from "lucide-react";
 import Loading from "../components/Loading";
 import Repository from "./Repository";
-
-interface User {
-  id: string;
-  login: string;
-  avatar_url: string;
-}
+import { User } from "../types";
 
 interface UsersProps {
   users: User[];
@@ -29,43 +23,16 @@ const Users = ({
 
   if (!users || users.length < 1) return null;
 
-  const fetchUserRepositories = async (user: User) => {
-    setValue("exclude.repoLoadingStates", {
-      ...watch("exclude.repoLoadingStates"),
-      [user.id]: true,
-    });
-
-    try {
-      const repos = await getUserRepositories(user.login);
-      setValue("exclude.repositoriesCache", {
-        ...watch("exclude.repositoriesCache"),
-        [user.id]: repos,
-      });
-      return repos;
-    } catch (error) {
-      console.error(`Failed to fetch repos for ${user.login}:`, error);
-      return [];
-    } finally {
-      const newRepoLoadingStates = { ...watch("exclude.repoLoadingStates") };
-      delete newRepoLoadingStates[user.id];
-      setValue("exclude.repoLoadingStates", newRepoLoadingStates);
-    }
-  };
-
   const handleUserSelect = async (user: User) => {
     const expandedIds = watch("exclude.expandedId") || [];
 
     if (expandedIds.includes(user.id)) {
       setValue(
         "exclude.expandedId",
-        expandedIds.filter((id: string) => id !== user.id)
+        expandedIds.filter((id: string) => id !== String(user.id))
       );
     } else {
       setValue("exclude.expandedId", [...expandedIds, user.id]);
-
-      if (!watch("exclude.repositoriesCache")?.[user.id]) {
-        await fetchUserRepositories(user);
-      }
     }
   };
 
@@ -80,7 +47,7 @@ const Users = ({
       </p>
 
       <div className="space-y-2">
-        {users.map((user) => {
+        {users.map((user: User) => {
           const isExpanded =
             watch("exclude.expandedId")?.includes(user.id) || false;
 
@@ -90,6 +57,7 @@ const Users = ({
               className="bg-white rounded-lg border border-gray-200 overflow-hidden"
             >
               <div
+                data-testid={`${user.login}-trigger-repo-btn`}
                 onClick={() => handleUserSelect(user)}
                 className="flex items-center justify-between p-4 hover:bg-gray-50 cursor-pointer transition-colors"
               >
@@ -115,9 +83,7 @@ const Users = ({
                 />
               </div>
 
-              {isExpanded && (
-                <Repository refetch={fetchUserRepositories} user={user} />
-              )}
+              <Repository user={user} />
             </div>
           );
         })}
@@ -127,6 +93,7 @@ const Users = ({
         <div className="mt-6 text-center">
           <button
             onClick={loadMore}
+            data-testid="load-more-btn"
             disabled={isLoadingMore}
             className="px-6 py-2 cursor-pointer bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 text-gray-700 rounded-md transition-colors disabled:cursor-not-allowed"
           >

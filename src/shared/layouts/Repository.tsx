@@ -1,48 +1,56 @@
 import NotFound from "../components/NotFound";
-import { Star, User } from "lucide-react";
+import { Star, User as UserIcon } from "lucide-react";
 import Loading from "../components/Loading";
 import { useFormContext } from "react-hook-form";
+import type { Repository, User } from "../types";
+import useSWR from "swr";
+import { getUserRepositories } from "../lib/api";
 
-const Repository = ({
-  user,
-  refetch,
-}: {
-  user: any;
-  refetch: (v: any) => void;
-}) => {
+const Repository = ({ user }: { user: User }) => {
   const { watch } = useFormContext();
   const isExpanded = watch("exclude.expandedId").includes(user.id);
-  const isRepoLoading = watch("exclude.repoLoadingStates")?.[user.id];
-  const userRepos = watch("exclude.repositoriesCache")?.[user.id];
+
+  const fetchRepo = () => getUserRepositories(user.login);
+
+  const {
+    data: repositories,
+    isLoading,
+    isValidating,
+    mutate,
+  } = useSWR(isExpanded ? [`user-repos-${user.login}`] : null, fetchRepo, {
+    revalidateOnFocus: false,
+    dedupingInterval: 50000,
+  });
 
   if (!isExpanded) return null;
 
   return (
     <div className="border-t border-gray-200 bg-gray-50">
-      {isRepoLoading ? (
-        <div className="p-6 text-center">
+      {isLoading || isValidating ? (
+        <div className="p-6 text-center" data-testid="loading-repo">
           <Loading />
           <p className="text-sm text-gray-500">
             Loading repositories for {user.login}...
           </p>
         </div>
-      ) : userRepos && userRepos.length > 0 ? (
+      ) : repositories && repositories.length > 0 ? (
         <div className="p-4 space-y-3">
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs text-gray-600">
-              {userRepos.length} repositories
+              {repositories.length} repositories
             </p>
             <button
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.stopPropagation();
-                refetch(user);
+                await mutate();
               }}
+              data-testid="refresh-btn"
               className="text-xs text-blue-600 hover:text-blue-800 transition-colors"
             >
               Refresh
             </button>
           </div>
-          {userRepos.map((repo) => (
+          {repositories.map((repo: Repository) => (
             <div
               key={repo.id}
               className="p-3 bg-white rounded-md border border-gray-200 hover:border-gray-300 transition-colors cursor-pointer"
@@ -82,7 +90,7 @@ const Repository = ({
         </div>
       ) : (
         <NotFound
-          Icon={<User className="w-8 h-8 mx-auto mb-2 text-gray-300" />}
+          Icon={<UserIcon className="w-8 h-8 mx-auto mb-2 text-gray-300" />}
           text={`No public repositories found for ${user.login}`}
         />
       )}

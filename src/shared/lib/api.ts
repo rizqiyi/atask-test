@@ -1,7 +1,7 @@
 const GITHUB_API_BASE = "https://api.github.com";
 const GITHUB_TOKEN = import.meta.env?.VITE_GITHUB_TOKEN;
 
-const githubApi = async (endpoint, params = {}) => {
+const githubApi = async (endpoint: string, params = {}) => {
   const url = new URL(`${GITHUB_API_BASE}${endpoint}`);
   Object.entries(params).forEach(([key, value]) => {
     url.searchParams.append(key, value as string);
@@ -21,7 +21,11 @@ const githubApi = async (endpoint, params = {}) => {
   return response.json();
 };
 
-export const searchUsers = async (query, page = 1, perPage = 5) => {
+export const searchUsers = async (
+  query: string,
+  page: number = 1,
+  perPage = 5
+) => {
   const data = await githubApi("/search/users", {
     q: query,
     per_page: perPage,
@@ -35,7 +39,7 @@ export const searchUsers = async (query, page = 1, perPage = 5) => {
   };
 };
 
-export const getUserRepositories = async (username) => {
+export const getUserRepositories = async (username: string) => {
   return await githubApi(`/users/${username}/repos`, {
     sort: "updated",
     direction: "desc",
